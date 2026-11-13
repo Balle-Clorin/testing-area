@@ -1340,16 +1340,21 @@ your tonearm geometry puts its alignment nulls and compare with an optimal (Loef
 - *Start guesses*: overhang and offset angle (both geometry models), or the two nulls (shape). Only the
   starting point of the fit. In the fixed-length model the start for the pivot-to-spindle distance is the
   effective length minus the overhang guess.
-- *Known constant phase offset c*: tick *set manually* and enter the value. Default 0. See the note below.
+- *Known constant angular offset (zenith) of cartridge/record, deg*: tick *set manually* and enter the value in
+  degrees of angle. Default 0. It is a constant angle, not a constant phase. See *Zenith offset and offset angle* below.
+- *Offset angle is known*: holds the arm offset angle at its start guess and fits the zenith offset instead
+  (the two are degenerate, so only one can be fitted).
 - *Trim each end*: seconds removed from both ends of the file before fitting, to avoid edge effects. Default 10 s.
   The smoothing average is pulled toward zero in the first and last half-window of the file, so **keep the trim
   at least half the smoothing value** (default 18 s smoothing needs 9 s or more; 40 s smoothing needs 20 s or
   more). This assumes the file starts and ends on the tone. If the file has silence or noise before or after
   the tone, that noise is smeared into the edges of the tone band, so increase the trim by the length of that
   lead-in and run-out as well.
-- *Show optimal (Loefgren A) curve*: plots the curve you would get with an optimal alignment and the same c.
-  For the fixed-pivot model that is at the same pivot-to-spindle distance. For the fixed-length model it is at
+- *Show optimal (Loefgren A) curve*: plots the ideal curve from theory only, with no zenith error or other
+  adjustment. For the fixed-pivot model that is at the same pivot-to-spindle distance. For the fixed-length model it is at
   the same effective length, and the table gives the pivot-to-spindle distance that achieves it.
+- *Also show optimal curve shifted by the zenith angular offset*: an optional third curve (yellow dash-dot) that is the
+  ideal curve plus the constant zenith angle, to show what a zenith error does.
   *Loefgren R1 / R2* set the inner and outer groove radii it is
   optimised for (defaults 60.3 and 146.05 mm). Untick *set manually* to use the record's own band.
 
@@ -1372,25 +1377,26 @@ your tonearm geometry puts its alignment nulls and compare with an optimal (Loef
   offset angle. The stylus tip zenith error is the same kind of constant angle and is added to it.
 - A true constant phase offset (e.g. a channel delay in the electronics) is a different thing and is not
   modelled. A level that cannot be explained by a plausible zenith error may be that.
+- **Constant W:** set the exponent q to 0 (W = W0 at every radius). q = 1 is not constant: it makes W grow as 1/r
+  toward the centre. W and q are values you enter; nothing is fitted for them.
+- The stylus tip zenith error is an optional extra constant angle added to the zenith offset.
 - The shape fit does not use the formula; for that model the plot shows the converted data only.
 - Tick off *Tracking angle from delay* to get the R15 fit back exactly.
 
 **Show page 2** adds a second figure with phase, tracking angle (with the fitted and optimal geometry curves),
 2nd harmonic and the fit table.
 
-### Fixed or free offset
+### Zenith offset and offset angle
 
-The curve shape alone cannot separate a constant phase offset from the position of the nulls: different
-combinations give an identical curve. So:
+Offset angle and a constant zenith angle are exactly degenerate (1 degree of one looks like 1 degree of the other),
+so the curve shape cannot separate them. Fix one and fit the other:
 
-- With **c fixed** (ticked), overhang, offset angle and null positions are all determined, and the optimal
-  curve is available.
-- With **c free** (unticked), the app reports the fitted geometry (overhang and Leff, or the pivot-to-spindle
-  distance for the fixed-length model), but offset angle and nulls are shown as
-  *indeterminate*, and no optimal curve is drawn.
+- Enter a **known zenith offset** (default 0) and the app fits the arm **offset angle**. The overhang, offset angle and
+  null positions are then determined and the optimal curve is available.
+- Or tick **Offset angle is known** and the app holds the offset angle at the start guess and fits the **zenith offset**.
 
-Only fix c to a value you know independently. The cause of a constant R-L phase offset (cartridge, cabling,
-electronics, mastering) is not established by this analysis.
+The cause of the fitted zenith offset (cartridge, record, tilt) is not established by this analysis. The zenith
+offset used is written as a light-blue note in the plots.
 
 ## Reading the results
 
@@ -1405,7 +1411,7 @@ electronics, mastering) is not established by this analysis.
 - **Processing log** lists what was detected: tone start and end, side, speed deviation, fit result.
   Warnings are also shown at the top of the results.
 - **Download time series CSV** contains time, radius, phase, coherence, levels, tracked frequency, delay, the
-  harmonic columns, the fitted phase, the angular error (*angular_error_phase_equiv*) with its fitted geometry
+  harmonic columns, the fitted phase, the tracking angle in degrees (*angular_error_deg*) with its fitted geometry
   curve (*angular_error_fit*) and the normalised harmonics.
 
 ## Troubleshooting
@@ -1420,7 +1426,7 @@ electronics, mastering) is not established by this analysis.
 - **"Fit not applied"**: the fit needs a record profile (radius axis) and the fixed value of the chosen model
   (pivot-to-spindle distance or effective length).
 - **Fit curve does not follow the data**: look at the smoothing, the trim, and the x-axis limits, and check
-  that c and the pivot-to-spindle distance are right.
+  that the zenith offset and the pivot-to-spindle distance are right.
 - **Analysis failed**: the message shown names the cause, for example a mono file or a silent file.
 
 ## Adding your own record
@@ -1551,11 +1557,11 @@ with st.sidebar:
                 PHASE_FIT_N1_GUESS_MM = c1.number_input("Inner null guess (mm), shape", value=D["PHASE_FIT_N1_GUESS_MM"])
                 PHASE_FIT_N2_GUESS_MM = c2.number_input("Outer null guess (mm), shape", value=D["PHASE_FIT_N2_GUESS_MM"])
             PHASE_FIT_OFFSET_DEG = opt_float("Known constant angular offset (zenith) of cartridge/record, deg", D["PHASE_FIT_OFFSET_DEG"], "cfix",
-                                             help="With the angular-error conversion on this is a constant ANGULAR error (cartridge zenith / record tilt), "
-                                                  "in degrees of phase at the reference radius (zenith in degrees = value / k); it gives a phase that "
-                                                  "varies as 1/r. With the conversion off it is a constant phase offset (R15). "
+                                             help="With the angle conversion on this is a constant ANGULAR error (cartridge zenith / record tilt) in "
+                                                  "degrees of angle. It gives a phase that varies with radius. With the "
+                                                  "conversion off it is a constant phase offset (R15). "
                                                   "Checked: fixed to this value, making offset angle and nulls identifiable. "
-                                                  "Unchecked: c is fitted, and nulls are reported as indeterminate (geometry) "
+                                                  "Unchecked: it is fitted, and nulls are reported as indeterminate (geometry) "
                                                   "or approximate (shape).")
             PHASE_FIT_TRIM_S = st.number_input("Trim each end before fitting (s)", value=D["PHASE_FIT_TRIM_S"], min_value=0.0)
             PHASE_FIT_SHOW_OPTIMAL = st.checkbox("Show optimal (Löfgren A) curve", value=D["PHASE_FIT_SHOW_OPTIMAL"])
