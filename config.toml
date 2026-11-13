@@ -1,6 +1,0 @@
-[server]
-# Allow uploads up to 500 MB (Streamlit's default is 200 MB). A 22 minute 48 kHz 16-bit stereo WAV is about 255 MB.
-maxUploadSize = 500
-
-[browser]
-gatherUsageStats = false
