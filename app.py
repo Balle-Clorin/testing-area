@@ -40,7 +40,7 @@ _CONTENT = {"width": "content"} if _NEW_WIDTH_API else {}
 # App identity (shown in the result header)
 # ---------------------------
 SCRIPT_NAME = "ANYSIGNAL_-phasediff_2harm_sweep"
-SCRIPT_REV = "R15-web2"
+SCRIPT_REV = "R15-web3"
 
 # ---------------------------
 # Fixed constants (as in R15)
@@ -1672,4 +1672,8 @@ else:
     st.info("Upload a recording, check the settings in the sidebar, and press **Run analysis**. "
             "Defaults match the R15 script: Sperling profile, peak mode at 1 kHz, geometry fit with pivot-to-spindle 215.35 mm.")
 
-st.caption(f"{SCRIPT_NAME} {SCRIPT_REV} · Balle-Clorin · PolyForm Noncommercial 1.0.0")
+try:
+    _limit_txt = f" · upload limit {st.get_option('server.maxUploadSize')} MB"
+except Exception:
+    _limit_txt = ""
+st.caption(f"{SCRIPT_NAME} {SCRIPT_REV} · Balle-Clorin · PolyForm Noncommercial 1.0.0{_limit_txt}")
