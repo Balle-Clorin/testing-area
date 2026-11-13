@@ -40,7 +40,7 @@ _CONTENT = {"width": "content"} if _NEW_WIDTH_API else {}
 # App identity (shown in the result header)
 # ---------------------------
 SCRIPT_NAME = "ANYSIGNAL_-phasediff_2harm_sweep"
-SCRIPT_REV = "R15-web3"
+SCRIPT_REV = "R15-web4"
 
 # ---------------------------
 # Fixed constants (as in R15)
@@ -1095,6 +1095,25 @@ def caption_text(R):
     return cap
 
 
+def _wrap_caption(R, width=170):
+    import textwrap
+    out = []
+    for ln in caption_text(R).split("\n"):
+        out.extend(textwrap.wrap(ln, width=width) or [""])
+    return "\n".join(out)
+
+
+def _add_caption(fig, R):
+    """Caption placed with fig.text in a reserved bottom strip, so its length can never
+    change the size of the plot axes (text inside axes takes part in constrained layout)."""
+    txt = _wrap_caption(R)
+    n = txt.count("\n") + 1
+    h_in = fig.get_figheight()
+    strip = (0.13 * n + 0.15) / h_in          # inches reserved for n lines of 8 pt text
+    fig.get_layout_engine().set(rect=(0, strip, 1, 1 - strip))
+    fig.text(0.5, strip / 2, txt, ha='center', va='center', fontsize=8, color='#9a9a9a')
+
+
 def _title(base, R, C):
     if R["RADIUS_MODE"]:
         base += f" vs radius, {R['prof_label']} side {R['sp_side']}"
@@ -1105,12 +1124,11 @@ def _title(base, R, C):
 def fig_page1(R, C):
     _style()
     fig = plt.figure(constrained_layout=True, figsize=(12, 11))
-    gs = fig.add_gridspec(nrows=5, ncols=1, height_ratios=[1, 1, 1, 0.7, 0.12])
+    gs = fig.add_gridspec(nrows=4, ncols=1, height_ratios=[1, 1, 1, 0.7])
     ax_phase = fig.add_subplot(gs[0, 0])
     ax_delay = fig.add_subplot(gs[1, 0], sharex=ax_phase)
     ax_level = fig.add_subplot(gs[2, 0], sharex=ax_phase)
     ax_harm = fig.add_subplot(gs[3, 0], sharex=ax_phase)
-    ax_cap = fig.add_subplot(gs[4, 0])
 
     draw_phase(ax_phase, -0.22, R, C)
     ax_phase.set_title(_title(f"R-L phase. Positive R leads L, level, delay and 2nd-harmonic ({R['MODE']})", R, C))
@@ -1130,8 +1148,7 @@ def fig_page1(R, C):
     draw_harm(ax_harm, -0.45 if R["harm_norm_active"] else -0.32, R, C)
     configure_x_axis(ax_harm, R, C)
 
-    ax_cap.axis('off')
-    ax_cap.text(0.5, 0.5, caption_text(R), ha='center', va='center', fontsize=8, color='#9a9a9a')
+    _add_caption(fig, R)
     draw_markers([ax_phase, ax_delay, ax_level, ax_harm], R)
     return fig
 
@@ -1143,19 +1160,17 @@ def fig_page2(R, C):
     ang = R["ang_active"]
     if ang:
         fig = plt.figure(constrained_layout=True, figsize=(12, 13 + table_h * 9))
-        gs = fig.add_gridspec(nrows=5, ncols=1, height_ratios=[1, 1, 1, max(table_h, 0.001), 0.09])
+        gs = fig.add_gridspec(nrows=4, ncols=1, height_ratios=[1, 1, 1, max(table_h, 0.001)])
         ax_p = fig.add_subplot(gs[0, 0])
         ax_a = fig.add_subplot(gs[1, 0], sharex=ax_p)
         ax_h = fig.add_subplot(gs[2, 0], sharex=ax_p)
         ax_t = fig.add_subplot(gs[3, 0])
-        ax_c = fig.add_subplot(gs[4, 0])
     else:
         fig = plt.figure(constrained_layout=True, figsize=(12, 9 + table_h * 9))
-        gs = fig.add_gridspec(nrows=4, ncols=1, height_ratios=[1, 1, max(table_h, 0.001), 0.09])
+        gs = fig.add_gridspec(nrows=3, ncols=1, height_ratios=[1, 1, max(table_h, 0.001)])
         ax_p = fig.add_subplot(gs[0, 0])
         ax_h = fig.add_subplot(gs[1, 0], sharex=ax_p)
         ax_t = fig.add_subplot(gs[2, 0])
-        ax_c = fig.add_subplot(gs[3, 0])
 
     draw_phase(ax_p, -0.24, R, C)
     ax_p.set_title(_title(f"R-L phase difference (positive: R leads L), angular error and 2nd harmonic ({R['MODE']})"
@@ -1187,8 +1202,7 @@ def fig_page2(R, C):
             cell.set_edgecolor("#555555")
             cell.get_text().set_color(FG)
 
-    ax_c.axis('off')
-    ax_c.text(0.5, 0.5, caption_text(R), ha='center', va='center', fontsize=8, color='#9a9a9a')
+    _add_caption(fig, R)
     return fig
 
 
