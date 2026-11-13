@@ -13,6 +13,9 @@ a `packages.txt` containing `libsndfile1` if loading WAV files fails).
 
 ## Notes
 
+- Upload limit is 500 MB (`.streamlit/config.toml`); the analysis reads the file in blocks (about 200 MB peak
+  memory on a 255 MB WAV). FLAC is about half the size and uploads faster.
+- `streamlit==1.40.2` is pinned for old Safari/iPad browsers; the app also runs on current Streamlit.
 - Supports Sperling and Clearaudio test-record profiles; add more in `RECORD_PROFILES` in `app.py`.
 - Stylus contact width W is calibrated at 18.46 um at 127 mm (growth exponent q = 0.41) from a 3 degree cartridge
   twist on the Clearaudio 3150 Hz track. Change both in the sidebar for another stylus.

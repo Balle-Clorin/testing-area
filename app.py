@@ -26,7 +26,15 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MultipleLocator, FuncFormatter
 import pandas as pd
+import inspect
+
 import streamlit as st
+
+# Streamlit compatibility: newer releases take width="stretch"/"content"; older ones (e.g. the 1.40.2 pinned for
+# old Safari/iPad) take use_container_width. Probe once and use whichever the installed version understands.
+_NEW_WIDTH_API = "width" in inspect.signature(st.button).parameters
+_STRETCH = {"width": "stretch"} if _NEW_WIDTH_API else {"use_container_width": True}
+_CONTENT = {"width": "content"} if _NEW_WIDTH_API else {}
 
 # ---------------------------
 # App identity (shown in the result header)
@@ -1423,7 +1431,7 @@ section[data-testid="stSidebar"] .st-key-alphaknown label, section[data-testid="
 </style>""", unsafe_allow_html=True)
 
 with st.sidebar:
-    if st.button("📖 User guide", width="stretch", key="open_guide"):
+    if st.button("📖 User guide", key="open_guide", **_STRETCH):
         show_guide()
     st.header("Settings")
     # Record and tone frequency sit OUTSIDE the form so they update immediately when the record is
@@ -1449,7 +1457,7 @@ with st.sidebar:
                                         "Shape: c + k(r-n1)(r-n2)/r with free nulls.")
     with st.form("settings"):
         # Submit button first, so it sits at the top of the form (it still submits every widget below it).
-        submitted = st.form_submit_button("Run analysis", type="primary", width="stretch")
+        submitted = st.form_submit_button("Run analysis", type="primary", **_STRETCH)
         with st.expander("Analysis", expanded=True):
             MODE = st.selectbox("Mode", ["peak", "sweep", "broadband"], index=0,
                                 help="peak: track the tone near a set frequency. sweep: track the dominant bin in a band. "
@@ -1643,7 +1651,7 @@ if res:
             {"Fitted": [f for _, f, _ in res["table"]],
              **({"Optimal (target)": [o if o is not None else "—" for _, _, o in res["table"]]} if has_opt else {})},
             index=[l for l, _, _ in res["table"]])
-        st.dataframe(tdf, width="content")
+        st.dataframe(tdf, **_CONTENT)
 
     tabs = st.tabs(["Page 1: phase, delay, level, H2"]
                    + (["Page 2: phase, angular error, H2, fit"] if "page2" in res["pngs"] else [])
@@ -1652,7 +1660,7 @@ if res:
     base = Path(res["name"]).stem
     for tab, k in zip(tabs, keys):
         with tab:
-            st.image(res["pngs"][k], width="stretch")
+            st.image(res["pngs"][k], **_STRETCH)
             st.download_button("Download PNG", res["pngs"][k], file_name=f"{base}_{k}.png", mime="image/png", key=f"dl_{k}")
 
     st.download_button("Download time series CSV", res["csv"], file_name=f"{base}_timeseries.csv", mime="text/csv")
