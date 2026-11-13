@@ -1266,8 +1266,10 @@ your tonearm geometry puts its alignment nulls and compare with an optimal (Loef
 - Record the whole tone band, and start recording before the needle drop so the start of the tone is clean.
 - The app detects where the tone starts and ends from the signal level. Needle-drop clicks shorter than the
   *hold time* are ignored.
-- Streamlit limits uploads to 200 MB by default. If a file is refused, use FLAC, or raise `server.maxUploadSize`
-  in the Streamlit configuration.
+- Uploads are limited by `server.maxUploadSize` in `.streamlit/config.toml` (set to 500 MB in this repository;
+  Streamlit's own default is 200 MB). If the uploader still says 200 MB, that file is not being read: it must sit in
+  the folder `.streamlit` next to `app.py` in the repository root, and a hosted app must be rebooted after it is added.
+  FLAC is about half the size of WAV.
 
 ## Settings
 
