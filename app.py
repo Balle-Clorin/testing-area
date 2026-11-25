@@ -94,7 +94,7 @@ DEFAULTS = dict(
     # as the groove gets slower and the recorded wavelength shorter, ~ (r_ref/r)^p with p = 1 for a response
     # proportional to 1/groove speed. ANG_NORM converts phase to angular error (units: degrees of phase this angular
     # error would give at r_ref) and the geometry fits use the same response. ANG_NORM=False gives R15 behaviour.
-    ANG_NORM=True, ANG_W_UM=18.46, ANG_W_EXP=0.41, ANG_TIP_ZENITH_DEG=0.0,
+    ANG_NORM=True, ANG_W_UM=18.46, ANG_W_EXP=0.0, ANG_TIP_ZENITH_DEG=0.0,
 )
 
 
